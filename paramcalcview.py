@@ -1,6 +1,9 @@
+from kivy.app import App
+from kivy.properties import ObjectProperty
+from kivy.core.window import Window
+from kivy.uix.widget import Widget
 from kivy.uix.screenmanager import Screen
 from kivy.graphics import Color, Rectangle
-from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 
@@ -19,29 +22,63 @@ class WarningPopup(Popup):
 
 
 class ParamCalcWindow(Screen):
+    Window.size = (int(900 / 3), int(1600 / 3))
+    Window.minimum_width, Window.minimum_height = Window.size
 
+
+    controller = ObjectProperty()
+    model = ObjectProperty()
     toggles_previous_state = "normaldown"
+
 
     def __init__(self, **kw):
         super(ParamCalcWindow, self).__init__(**kw)
+        self._createInputs()
 
-    def clear_entry(self, instance: TextInput):
-        instance.text = ""
+    def _createInputs(self):
+        # iteractivaly creates all text inputs.
         pass
+
+    def Enabler(self, *instances):
+        instance: Widget
+        for instance in instances:
+            instance.disabled = False
+
+    def Disabler(self, *instances):
+        instance: Widget
+        for instance in instances:
+            instance.disabled = True
+
+    def clear_entry(self, *instances):
+        instance: Widget
+        for instance in instances:
+            instance.text = ""
 
     def clear_all(self):
-        self.ids.PotenciaAparente.text = ""
-        self.ids.PotenciaAtiva.text = ""
-        self.ids.PotenciaReativa.text = ""
-        self.ids.cosphi.text = ""
-        self.ids.phi.text = ""
-        self.ids.Reatancia.text = ""
-        self.ids.Tensao.text = ""
-        self.ids.Corrente.text = ""
-        pass
+        self.clear_entry(
+            self.ids.PotenciaAparente,
+            self.ids.PotenciaAtiva,
+            self.ids.PotenciaReativa,
+            self.ids.CosPhi,
+            self.ids.Phi,
+            self.ids.Tensao,
+            self.ids.Corrente,
+        )
+        self.ids.Reatancia.text = "Capacitivo Indutivo"
+        self.Enabler(
+            self.ids.PotenciaAparente,
+            self.ids.PotenciaAtiva,
+            self.ids.PotenciaReativa,
+            self.ids.CosPhi,
+            self.ids.Phi,
+            self.ids.Reatancia,
+            self.ids.Tensao,
+            self.ids.Corrente,
+        )
 
     def get_entries(self):
         return [
+            self.get_mode(),
             float(self.ids.PotenciaAparente.text)
             if self.ids.PotenciaAparente.text
             else None,
@@ -49,8 +86,8 @@ class ParamCalcWindow(Screen):
             float(self.ids.PotenciaReativa.text)
             if self.ids.PotenciaReativa.text
             else None,
-            self.filter_TextInput(self.ids.cosphi, lower_limit=0, upper_limit=1),
-            self.filter_TextInput(self.ids.phi, lower_limit=-90, upper_limit=90),
+            self.filter_TextInput(self.ids.CosPhi, lower_limit=0, upper_limit=1),
+            self.filter_TextInput(self.ids.Phi, lower_limit=-90, upper_limit=90),
             self.ids.Reatancia.text if self.ids.Reatancia.text else None,
             float(self.ids.Tensao.text) if self.ids.Tensao.text else None,
             float(self.ids.Corrente.text) if self.ids.Corrente.text else None,
@@ -67,12 +104,13 @@ class ParamCalcWindow(Screen):
         if lower_limit <= value <= upper_limit:
             return instance
         warning = WarningPopup()
+        warning.title = "Aviso"
         warning.message.text = instance.hint_text + " fora do intervalo permitido"
         self.clear_entry(instance)
         warning.open()
 
     def get_mode(self):
-        return [self.ids.trifasico.state, self.ids.monofasico.state]
+        return (self.ids.trifasico.state, self.ids.monofasico.state)
 
     def check_toggles(self):
 
@@ -87,3 +125,61 @@ class ParamCalcWindow(Screen):
         self.toggles_previous_state = (
             self.ids.trifasico.state + self.ids.monofasico.state
         )
+
+    def TextInputDisabler(self, instance) -> None:
+        """
+        Prototype for future use
+        """
+
+        # if not instance.text:
+        #     return
+        # match instance.name:
+        #     case "PotenciaAparente":
+        #         if self.ids.PotenciaAtiva.text:
+        #             self.Disabler(self.ids.PotenciaReativa, self.ids.CosPhi)
+        #         if self.ids.PotenciaReativa.text:
+        #             self.Disabler(
+        #                 self.ids.PotenciaAtiva,
+        #                 self.ids.CosPhi,
+        #                 self.ids.Phi,
+        #                 self.ids.Reatancia,
+        #             )
+        #         if self.ids.CosPhi.text or self.ids.Phi.text:
+        #             self.Disabler(self.ids.PotenciaAtiva, self.ids.PotenciaReativa)
+        #         if self.ids.Tensao.text:
+        #             self.Disabler(self.ids.Corrente)
+        #         if self.ids.Corrente.text:
+        #             self.Disabler(self.ids.Tensao)
+        #     case "PotenciaAtiva":
+        #         if self.ids.PotenciaAparente.text:
+        #             self.Disabler(
+        #                 self.ids.PotenciaReativa, self.ids.CosPhi, self.ids.Phi
+        #             )
+        #         if self.ids.PotenciaReativa.text:
+        #             self.Disabler(
+        #                 self.ids.PotenciaAparente,
+        #                 self.ids.CosPhi,
+        #                 self.ids.Phi,
+        #                 self.ids.Reatancia,
+        #             )
+        #         if self.ids.CosPhi.text:
+        #             self.Disabler(self.ids.PotenciaAparente, self.ids.Phi)
+        #         if self.ids.Phi.text:
+        #             self.Disabler(self.ids.PotenciaAparente, self.ids.PotenciaReativa)
+        #         if self.ids.Tensao.text and (
+        #             self.ids.CosPhi.text or self.ids.Phi.text
+        #         ):
+        #             self.Disabler(self.ids.Corrente)
+
+        #     case "Phi":
+        #         self.Disabler(self.ids.CosPhi, self.ids.Reatancia)
+        return
+
+
+class ParamCalcApp(App):
+    def build(self):
+        return ParamCalcWindow()
+
+
+if __name__ == "__main__":
+    ParamCalcApp().run()

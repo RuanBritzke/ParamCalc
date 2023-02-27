@@ -3,4 +3,6 @@ from cmath import *
 
 
 class ParamCalcModel:
-    pass
+
+    def __init__(self) -> None:
+        print("Hello, View")
