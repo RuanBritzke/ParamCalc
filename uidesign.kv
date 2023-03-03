@@ -1,0 +1,168 @@
+#:kivy 2.1.0
+<WarningPopup>:
+    title: ""
+    message: message
+    auto_dismiss: False
+    size_hint: None, None
+    width: grid.width + dp(25)
+    height: grid.height + root.title_size + dp(48)
+    
+    GridLayout:
+        id: grid
+        size_hint: None, None
+        size: self.minimum_size
+        padding: [10, 5]
+        cols: 1
+        AnchorLayout:
+            anchor_x: "center"
+            anchor_y: "bottom"
+            size_hint: None, None
+            height: message.height
+            width: max(message.width, butt.width)
+            Label: 
+                id: message
+                size_hint: None, None
+                size: self.texture_size
+                padding: [10, 5]
+        AnchorLayout:
+            anchor_x: "center"
+            anchor_y: "bottom"
+            size_hint: None, None
+            height: butt.height
+            width: max(message.width, butt.width)
+            Button:
+                id: butt
+                text: 'Fechar'
+                size_hint: None, None
+                size: self.texture_size
+                padding: [10, 5]
+                on_release: root.dismiss()
+
+
+<ParamCalcView>:
+    name: 'Calculadora'
+    canvas:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 0.95, 0.95
+        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+    
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: 1, 0.11
+            
+            ToggleButton:
+                id: trifasico
+                name: "trifasico"
+                text: 'Trifásico'
+                group: 'fases'
+                state: 'normal'
+                on_press: root.control_mode()
+
+            ToggleButton:
+                id: monofasico
+                name: "monofasico"
+                text: 'Monofásico'
+                group: 'fases'
+                state: 'down'
+                on_press: root.control_mode()
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: 1, 0.78
+                
+            TextInput:
+                id: PotenciaAparente
+                name: '_S'
+                hint_text: "Potência Aparente [kVA]"
+                text: ""
+                halign: 'center'
+                padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                input_filter: 'float'
+                multiline: False
+                on_focus: root.value_setter(self, self.focus, self.name, float(self.text) if self.text else None)
+                
+
+            TextInput:
+                id: PotenciaAtiva
+                name: '_P'
+                hint_text: "Potência Ativa [kW]"
+                text: ""
+                halign: 'center'
+                padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                input_filter: 'float'
+                multiline: False
+                on_focus: root.value_setter(self, self.focus, self.name, float(self.text) if self.text else None)
+
+
+            TextInput:
+                id: PotenciaReativa
+                name: '_Q'
+                hint_text: "Potência Reativa [kVAr]"
+                text: ""
+                halign: 'center'
+                padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                input_filter: 'float'
+                multiline: False
+                on_focus: root.value_setter(self, self.focus, self.name, float(self.text) if self.text else None)
+                
+
+            TextInput:
+                id: CosPhi
+                name: '_FP'
+                hint_text: "cos(\u03C6°)"
+                text: ""
+                halign: 'center'
+                padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                input_filter: 'float'
+                multiline: False
+                on_focus: root.value_setter(self, self.focus, self.name, float(self.text) if self.text else None)
+
+            Label:
+                text: ""
+                size_hint: 1, 0.05                
+
+            TextInput:
+                id: Tensao
+                name: "_V"
+                hint_text: "Tensão [kV]"
+                text: ""
+                halign: 'center'
+                padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                multiline: False
+                on_focus: root.value_setter(self, self.focus, self.name, float(self.text) if self.text else None)
+
+            TextInput:
+                id: Corrente
+                name: "_I"
+                hint_text: "Corrente [kA]"
+                text: ""
+                halign: 'center'
+                padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+                multiline: False
+                on_focus: root.value_setter(self, self.focus, self.name, float(self.text) if self.text  else None)
+                
+            Label:
+                text: ""
+                size_hint: 1, 0.01
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: 1, 0.11
+
+            Label:
+                text: ""
+                size_hint: 0.6, 1
+
+            Button:
+                id: Limpar
+                text: "Limpar"
+                size_hint: 0.4, 1
+                on_release: root.clear_button_signal()
+

@@ -1,10 +1,14 @@
-from kivy.app import App
+import os
+
+from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.core.window import Window
-from kivy.uix.widget import Widget
-from kivy.uix.screenmanager import Screen
+
 from kivy.graphics import Color, Rectangle
+from kivy.uix.widget import Widget
 from kivy.uix.textinput import TextInput
+from kivy.uix.togglebutton import ToggleButton
+from kivy.uix.screenmanager import Screen
 from kivy.uix.popup import Popup
 
 
@@ -21,98 +25,22 @@ class WarningPopup(Popup):
         self.rect.size = instance.size
 
 
-class ParamCalcWindow(Screen):
+class ParamCalcView(Screen):
     Window.size = (int(900 / 3), int(1600 / 3))
     Window.minimum_width, Window.minimum_height = Window.size
-
 
     controller = ObjectProperty()
     model = ObjectProperty()
     toggles_previous_state = "normaldown"
 
-
     def __init__(self, **kw):
-        super(ParamCalcWindow, self).__init__(**kw)
-        self._createInputs()
-
-    def _createInputs(self):
-        # iteractivaly creates all text inputs.
-        pass
-
-    def Enabler(self, *instances):
-        instance: Widget
-        for instance in instances:
-            instance.disabled = False
-
-    def Disabler(self, *instances):
-        instance: Widget
-        for instance in instances:
-            instance.disabled = True
-
-    def clear_entry(self, *instances):
-        instance: Widget
-        for instance in instances:
-            instance.text = ""
-
-    def clear_all(self):
-        self.clear_entry(
-            self.ids.PotenciaAparente,
-            self.ids.PotenciaAtiva,
-            self.ids.PotenciaReativa,
-            self.ids.CosPhi,
-            self.ids.Phi,
-            self.ids.Tensao,
-            self.ids.Corrente,
-        )
-        self.ids.Reatancia.text = "Capacitivo Indutivo"
-        self.Enabler(
-            self.ids.PotenciaAparente,
-            self.ids.PotenciaAtiva,
-            self.ids.PotenciaReativa,
-            self.ids.CosPhi,
-            self.ids.Phi,
-            self.ids.Reatancia,
-            self.ids.Tensao,
-            self.ids.Corrente,
-        )
-
-    def get_entries(self):
-        return [
-            self.get_mode(),
-            float(self.ids.PotenciaAparente.text)
-            if self.ids.PotenciaAparente.text
-            else None,
-            float(self.ids.PotenciaAtiva.text) if self.ids.PotenciaAtiva.text else None,
-            float(self.ids.PotenciaReativa.text)
-            if self.ids.PotenciaReativa.text
-            else None,
-            self.filter_TextInput(self.ids.CosPhi, lower_limit=0, upper_limit=1),
-            self.filter_TextInput(self.ids.Phi, lower_limit=-90, upper_limit=90),
-            self.ids.Reatancia.text if self.ids.Reatancia.text else None,
-            float(self.ids.Tensao.text) if self.ids.Tensao.text else None,
-            float(self.ids.Corrente.text) if self.ids.Corrente.text else None,
-        ]
-
-    def filter_TextInput(
-        self, instance: TextInput, lower_limit: float, upper_limit: float
-    ) -> float | None:
-        text = instance.text
-
-        if not text:
-            return None
-        value = float(text)
-        if lower_limit <= value <= upper_limit:
-            return instance
-        warning = WarningPopup()
-        warning.title = "Aviso"
-        warning.message.text = instance.hint_text + " fora do intervalo permitido"
-        self.clear_entry(instance)
-        warning.open()
-
-    def get_mode(self):
-        return (self.ids.trifasico.state, self.ids.monofasico.state)
+        super(ParamCalcView, self).__init__(**kw)
+        self.model.add_observer(self)
 
     def check_toggles(self):
+        """
+        Muda o comportamento dos toggles para um tipo de switch.
+        """
 
         if self.ids.trifasico.state == self.ids.monofasico.state:
             if self.toggles_previous_state == "normaldown":
@@ -126,60 +54,55 @@ class ParamCalcWindow(Screen):
             self.ids.trifasico.state + self.ids.monofasico.state
         )
 
-    def TextInputDisabler(self, instance) -> None:
+    def control_mode(self):
         """
-        Prototype for future use
+        Envia o modo de calculo, se os parametros indicados
+        são trifásicos ou monofáscios
         """
+        self.check_toggles()
+        self.controller.set_mode(
+            "trifasico" if self.ids.trifasico.state == "down" else "monofasico"
+        )
 
-        # if not instance.text:
-        #     return
-        # match instance.name:
-        #     case "PotenciaAparente":
-        #         if self.ids.PotenciaAtiva.text:
-        #             self.Disabler(self.ids.PotenciaReativa, self.ids.CosPhi)
-        #         if self.ids.PotenciaReativa.text:
-        #             self.Disabler(
-        #                 self.ids.PotenciaAtiva,
-        #                 self.ids.CosPhi,
-        #                 self.ids.Phi,
-        #                 self.ids.Reatancia,
-        #             )
-        #         if self.ids.CosPhi.text or self.ids.Phi.text:
-        #             self.Disabler(self.ids.PotenciaAtiva, self.ids.PotenciaReativa)
-        #         if self.ids.Tensao.text:
-        #             self.Disabler(self.ids.Corrente)
-        #         if self.ids.Corrente.text:
-        #             self.Disabler(self.ids.Tensao)
-        #     case "PotenciaAtiva":
-        #         if self.ids.PotenciaAparente.text:
-        #             self.Disabler(
-        #                 self.ids.PotenciaReativa, self.ids.CosPhi, self.ids.Phi
-        #             )
-        #         if self.ids.PotenciaReativa.text:
-        #             self.Disabler(
-        #                 self.ids.PotenciaAparente,
-        #                 self.ids.CosPhi,
-        #                 self.ids.Phi,
-        #                 self.ids.Reatancia,
-        #             )
-        #         if self.ids.CosPhi.text:
-        #             self.Disabler(self.ids.PotenciaAparente, self.ids.Phi)
-        #         if self.ids.Phi.text:
-        #             self.Disabler(self.ids.PotenciaAparente, self.ids.PotenciaReativa)
-        #         if self.ids.Tensao.text and (
-        #             self.ids.CosPhi.text or self.ids.Phi.text
-        #         ):
-        #             self.Disabler(self.ids.Corrente)
-
-        #     case "Phi":
-        #         self.Disabler(self.ids.CosPhi, self.ids.Reatancia)
+    def value_setter(self, instance, focus, kw, value: float | None):
+        """
+        Generic caller for atribute setter.
+        """
+        if focus:
+            return
+        if kw == "_FP":
+            self.controller.filter_TextInput(
+                instance, kw, value, lower_limit=0, upper_limit=1
+            )
+            return
+        if kw in ["_P", "_Q"]:
+            upper = (
+                float(self.ids.PotenciaAparente.text)
+                if self.ids.PotenciaAparente.text
+                else None
+            )
+            if upper is not None:
+                self.controller.filter_TextInput(
+                    instance, kw, value, lower_limit=0, upper_limit=upper
+                )
+                return
+        self.controller.filter_TextInput(instance, kw, value, lower_limit=0)
         return
 
+    def clear_button_signal(self):
+        self.controller.clear_all()
 
-class ParamCalcApp(App):
-    def build(self):
-        return ParamCalcWindow()
+    def model_is_changed(self, attribute, value):
+        """
+        The method is called when the model changes.
+        Requests and displays the new values.
+        """
+        for element in self.walk():
+            if not isinstance(element, TextInput):
+                continue
+            element: TextInput
+            if element.name == attribute:
+                element.text = str(round(value, 2) if value else "")
 
 
-if __name__ == "__main__":
-    ParamCalcApp().run()
+Builder.load_file(os.path.join(os.path.dirname(__file__), "uidesign.kv"))
